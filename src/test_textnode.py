@@ -2,6 +2,7 @@ import unittest
 
 
 from textnode import TextNode, TextType, text_node_to_html_node
+from splitdelimiter import split_nodes_delimiter
 
 
 class TestTextNode(unittest.TestCase):
@@ -28,7 +29,7 @@ class TestTextNode(unittest.TestCase):
         self.assertRaises(TypeError, TextNode, "123")
     def test_text_node_to_html_node(self):
     # Test normal text
-        node = TextNode("Just plain text", TextType.NORMAL)
+        node = TextNode("Just plain text", TextType.TEXT)
         html_node = text_node_to_html_node(node)
         assert html_node.tag == "", "Normal text should have empty tag"
         assert html_node.value == "Just plain text", "Normal text value should be preserved"
@@ -68,7 +69,49 @@ class TestTextNode(unittest.TestCase):
         assert html_node.tag == "img", "Image text should have an 'img' tag"
         assert html_node.value == "", "Image text is passed into an 'alt' prop"
         assert html_node.props == {"src": "https://www.boot.dev", "alt": "this is an image"}, "Image text should have a src props and and a alt prop"
+    
+    def test_basic_code_block(self):
+        node = TextNode("This is `code` here", TextType.TEXT)
+        result = split_nodes_delimiter([node], "`", TextType.CODE)
+        expected = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("code", TextType.CODE),
+            TextNode(" here", TextType.TEXT)
+        ]
+        self.assertEqual(result, expected)
 
+    def test_multiple_code_blocks(self):
+        node = TextNode("Here is `more` and `more code`", TextType.TEXT)
+        result = split_nodes_delimiter([node], "`", TextType.CODE)
+        expected = [
+            TextNode("Here is ", TextType.TEXT),
+            TextNode("more", TextType.CODE),
+            TextNode(" and ", TextType.TEXT),
+            TextNode("more code", TextType.CODE)
+        ]
+        self.assertEqual(result, expected)
+
+    def test_bold_text(self):
+        node = TextNode("This is **bold** text", TextType.TEXT)
+        result = split_nodes_delimiter([node], "**", TextType.BOLD)
+        expected = [
+            TextNode("This is ", TextType.TEXT),
+            TextNode("bold", TextType.BOLD),
+            TextNode(" text", TextType.TEXT)
+        ]
+        self.assertEqual(result, expected)
+
+    def test_already_formatted_node(self):
+        node = TextNode("Already bold", TextType.BOLD)
+        result = split_nodes_delimiter([node], "**", TextType.BOLD)
+        expected = [node]  # Should remain unchanged
+        self.assertEqual(result, expected)
+
+    def test_unmatched_delimiter(self):
+        node = TextNode("This is `incomplete", TextType.TEXT)
+        with self.assertRaises(ValueError) as context:
+            split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertEqual(str(context.exception), "Unmatched delimiter")
     
 if __name__ == "__main__":
     unittest.main()
