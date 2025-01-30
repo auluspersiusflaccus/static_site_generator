@@ -1,8 +1,9 @@
+from re import re 
 from enum import Enum
 from leafnode import LeafNode
 
 class TextType(Enum):
-    TEXT = "normal"
+    TEXT = "text"
     BOLD = "bold"
     ITALIC = "italic"
     CODE = "code"
@@ -39,3 +40,10 @@ def text_node_to_html_node(text_node):
     elif text_node.text_type == TextType.IMAGE:
         return LeafNode("img", "",{"src": text_node.url, "alt": text_node.text})
     raise Exception("TextNode type does not match any Textype")
+
+def extract_markdown_images(text):
+    return re.findall(r"!\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+
+def extract_markdown_url(text):
+    return re.findall(r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)", text)
+
