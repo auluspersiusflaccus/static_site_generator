@@ -1,7 +1,7 @@
 import unittest
 
 
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import TextNode, TextType, text_node_to_html_node, extract_markdown_images, extract_markdown_url
 from splitdelimiter import split_nodes_delimiter
 
 
@@ -113,5 +113,33 @@ class TestTextNode(unittest.TestCase):
             split_nodes_delimiter([node], "`", TextType.CODE)
         self.assertEqual(str(context.exception), "Unmatched delimiter")
     
+    def test_extract_markdown_images(self):
+        text_1 = "some text ![alt_text](imageurl) some more text"
+        text_2 = "some text [alt_text](imageurl) some more text"
+        text_3 = "some text ![alt[]_text](imageurl) some more text"
+        text_4 = "some text ![alt_text](ima()geurl) some more text"
+        text_5 = "(some text ![alt_text](imageurl) some more text)"
+        text_6 = "some text ![alt_text](imageurl) some more text ![alt_text2](imageurl2)"
+        self.assertEqual(extract_markdown_images(text_1), [("alt_text", "imageurl")])
+        self.assertEqual(extract_markdown_images(text_2), [])
+        self.assertEqual(extract_markdown_images(text_3), [])
+        self.assertEqual(extract_markdown_images(text_4), [])
+        self.assertEqual(extract_markdown_images(text_5), [("alt_text", "imageurl")])
+        self.assertEqual(extract_markdown_images(text_6), [("alt_text", "imageurl"), ("alt_text2", "imageurl2")])
+    
+    def test_extract_markdown_url(self):
+        text_1 = "some text [alt_text](url) some more text"
+        text_2 = "some text ![alt_text](url) some more text"
+        text_3 = "some text [alt[]_text](url) some more text"
+        text_4 = "some text [alt_text](()url) some more text"
+        text_5 = "(some text [alt_text](url) some more text)"
+        text_6 = "some text [alt_text](url) some more text [alt_text2](url2)"
+        self.assertEqual(extract_markdown_url(text_1), [("alt_text", "url")])
+        self.assertEqual(extract_markdown_url(text_2), [])
+        self.assertEqual(extract_markdown_url(text_3), [])
+        self.assertEqual(extract_markdown_url(text_4), [])
+        self.assertEqual(extract_markdown_url(text_5), [("alt_text", "url")])
+        self.assertEqual(extract_markdown_url(text_6), [("alt_text", "url"), ("alt_text2", "url2")])
+
 if __name__ == "__main__":
     unittest.main()

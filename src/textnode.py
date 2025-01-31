@@ -1,4 +1,4 @@
-from re import re 
+import re
 from enum import Enum
 from leafnode import LeafNode
 

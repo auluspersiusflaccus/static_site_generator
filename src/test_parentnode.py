@@ -84,8 +84,5 @@ class TestParentNode(unittest.TestCase):
         expected = "<div class=\"container\" id=\"main\" data-test=\"true\" style=\"color: blue\"><p>Hello</p></div>"
         self.assertEqual(node.to_html(), expected)
 
-
-        
-
 if __name__ == "__main__":
     unittest.main()
